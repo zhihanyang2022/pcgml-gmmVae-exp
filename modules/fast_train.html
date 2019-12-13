@@ -1,0 +1,117 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module fast_train</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>fast_train</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/yangz2/projects/1906-pcgml/train_vae_old/modules/fast_train.py">/home/yangz2/projects/1906-pcgml/train_vae_old/modules/fast_train.py</a></font></td></tr></table>
+    <p><tt>fast_train.py<br>
+DO&nbsp;NOT&nbsp;EDIT&nbsp;THIS&nbsp;FILE!&nbsp;THIS&nbsp;FILE&nbsp;IS&nbsp;AUTO-GENERATED!</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top><a href="torch.html">torch</a><br>
+</td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="builtins.html#object">builtins.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="fast_train.html#DataConversion">DataConversion</a>
+</font></dt><dt><font face="helvetica, arial"><a href="fast_train.html#DataPipeline">DataPipeline</a>
+</font></dt><dt><font face="helvetica, arial"><a href="fast_train.html#DataPreprocess">DataPreprocess</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="DataConversion">class <strong>DataConversion</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Static methods defined here:<br>
+<dl><dt><a name="DataConversion-get_dl"><strong>get_dl</strong></a>(torch_xs: torch.Tensor, torch_ys: torch.Tensor, bs: int, shuffle: bool, preprocess_func=None) -&gt; data_utils.WrappedDataLoader</dt><dd><tt>Convert&nbsp;two&nbsp;PyTorch&nbsp;tensors&nbsp;to&nbsp;a&nbsp;WrappedDataLoader.<br>
+&nbsp;<br>
+:param&nbsp;xs:&nbsp;a&nbsp;PyTorch&nbsp;tensor&nbsp;of&nbsp;training&nbsp;examples&nbsp;with&nbsp;the&nbsp;zeroth&nbsp;axis&nbsp;being&nbsp;the&nbsp;batch&nbsp;axis<br>
+:param&nbsp;ys:&nbsp;a&nbsp;PyTorch&nbsp;tensor&nbsp;of&nbsp;training&nbsp;targets&nbsp;with&nbsp;the&nbsp;zeroth&nbsp;axis&nbsp;being&nbsp;the&nbsp;batch&nbsp;axis<br>
+:param&nbsp;bs:&nbsp;batch&nbsp;size<br>
+:param&nbsp;shuffle:&nbsp;whether&nbsp;training&nbsp;examples&nbsp;and&nbsp;targets&nbsp;are&nbsp;shuffled,&nbsp;True&nbsp;for&nbsp;training,&nbsp;False&nbsp;for&nbsp;validation<br>
+:param&nbsp;preprocess_func:&nbsp;a&nbsp;function&nbsp;that&nbsp;inputs&nbsp;a&nbsp;batch&nbsp;of&nbsp;training&nbsp;examples&nbsp;and&nbsp;targets,&nbsp;do&nbsp;something&nbsp;with&nbsp;them,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;and&nbsp;outputs&nbsp;them<br>
+:return&nbsp;a&nbsp;WrappedDataLoader&nbsp;instance&nbsp;that&nbsp;can&nbsp;be&nbsp;used&nbsp;directly&nbsp;for&nbsp;training</tt></dd></dl>
+
+<dl><dt><a name="DataConversion-np_array2torch_tensor"><strong>np_array2torch_tensor</strong></a>(np_array: &lt;built-in function array&gt;) -&gt; torch.Tensor</dt><dd><tt>Convert&nbsp;an&nbsp;NumPy&nbsp;array&nbsp;to&nbsp;a&nbsp;PyTorch&nbsp;tensor.</tt></dd></dl>
+
+<dl><dt><a name="DataConversion-np_int2np_binary"><strong>np_int2np_binary</strong></a>(np_int_data: &lt;built-in function array&gt;, num_channels: &lt;built-in function array&gt;) -&gt; &lt;built-in function array&gt;</dt><dd><tt>Convert&nbsp;2d&nbsp;arrays&nbsp;of&nbsp;integers&nbsp;to&nbsp;3d&nbsp;arrays&nbsp;of&nbsp;zeros&nbsp;and&nbsp;ones&nbsp;using&nbsp;one-hot&nbsp;encoding.<br>
+&nbsp;<br>
+:param&nbsp;np_int_data:&nbsp;an&nbsp;array&nbsp;of&nbsp;to-be-converted&nbsp;2d&nbsp;arrays,&nbsp;shape:&nbsp;(bs,&nbsp;height,&nbsp;width)<br>
+:param&nbsp;num_channels:&nbsp;the&nbsp;depth&nbsp;of&nbsp;the&nbsp;to-be-outputted&nbsp;3d&nbsp;arrays<br>
+:return&nbsp;an&nbsp;array&nbsp;of&nbsp;3d&nbsp;arrays,&nbsp;shape:&nbsp;(bs,&nbsp;height,&nbsp;width,&nbsp;num_channels)</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="DataPipeline">class <strong>DataPipeline</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Static methods defined here:<br>
+<dl><dt><a name="DataPipeline-binary_vae"><strong>binary_vae</strong></a>(np_int_imgs: &lt;built-in function array&gt;, bs: int, shuffle: bool = True)</dt><dd><tt>Convert&nbsp;an&nbsp;array&nbsp;of&nbsp;2d&nbsp;arrays&nbsp;of&nbsp;integers&nbsp;to&nbsp;a&nbsp;WrappedDataLoader&nbsp;that&nbsp;can&nbsp;be&nbsp;used&nbsp;to&nbsp;train&nbsp;a&nbsp;binary&nbsp;VAE.<br>
+A&nbsp;binary&nbsp;VAE&nbsp;is&nbsp;a&nbsp;VAE&nbsp;that&nbsp;takes&nbsp;in&nbsp;and&nbsp;outputs&nbsp;one-hot&nbsp;encoded&nbsp;arrays.<br>
+&nbsp;<br>
+:param&nbsp;np_int_imgs:&nbsp;an&nbsp;array&nbsp;of&nbsp;2d&nbsp;arrays&nbsp;of&nbsp;integers,&nbsp;shape:&nbsp;(bs,&nbsp;height,&nbsp;width)<br>
+:param&nbsp;bs:&nbsp;batch_size<br>
+:param&nbsp;shuffle:&nbsp;whether&nbsp;training&nbsp;examples&nbsp;and&nbsp;targets&nbsp;are&nbsp;shuffled,&nbsp;True&nbsp;for&nbsp;training,&nbsp;False&nbsp;for&nbsp;validation<br>
+:return&nbsp;a&nbsp;WrappedDataLoader&nbsp;instance&nbsp;that&nbsp;can&nbsp;be&nbsp;used&nbsp;directly&nbsp;for&nbsp;training&nbsp;a&nbsp;binary&nbsp;VAE</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="DataPreprocess">class <strong>DataPreprocess</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Static methods defined here:<br>
+<dl><dt><a name="DataPreprocess-to_cuda"><strong>to_cuda</strong></a>(xs: torch.Tensor, ys: torch.Tensor) -&gt; tuple</dt><dd><tt>Convert&nbsp;two&nbsp;PyTorch&nbsp;tensors&nbsp;to&nbsp;double-precision&nbsp;and&nbsp;put&nbsp;them&nbsp;on&nbsp;GPU.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table>
+</body></html>
