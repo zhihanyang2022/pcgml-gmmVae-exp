@@ -1,3 +1,4 @@
+import os
 import json
 import torch.nn as nn
 import torch.optim
@@ -37,10 +38,12 @@ def conv_sampler(
     if up_sample: 
         core_layer = nn.ConvTranspose2d
         core_layer_name = 'convtranpose2d'
+        activation_name = 'relu'
         activation = nn.ReLU()
     else: 
         core_layer = nn.Conv2d
         core_layer_name = 'conv2d'
+        activation_name = 'lrelu'
         activation = nn.LeakyReLU(HYPERPARAMS['lrelu-negslope'])
         
     layers = OrderedDict([])
@@ -70,11 +73,11 @@ def conv_sampler(
         if i == layer_num - 1:
             if final_activation is not None:
                 if final_activation == 'sigmoid':
-                    layers[f'block{i}-lrelu'] = nn.Sigmoid()
+                    layers[f'block{i}-{final_activation}'] = nn.Sigmoid()
                 elif final_activation == 'relu':
-                    layers[f'block{i}-lrelu'] = nn.ReLU()
+                    layers[f'block{i}-{final_activation}'] = nn.ReLU()
         else:
-            layers[f'block{i}-lrelu'] = activation
+            layers[f'block{i}-{activation_name}'] = activation
         
         in_channels = kernel_nums[i]
         
@@ -93,8 +96,10 @@ class VAEDesign():
         self.unflatten_out_shape = unflatten_out_shape
             
     def save_as_json(self, json_fpath:str):
+        fdir = os.makedirs(''.join(json_fpath.split('/')[:-1]), exist_ok=True)
         with open(json_fpath, 'w') as json_f:
-            json.dump(self.design_dict, json_f)
+            # https://stackoverflow.com/questions/9170288/pretty-print-json-data-to-a-file-using-python
+            json.dump(self.design_dict, json_f, indent=4)
                     
     @property
     def design_dict(self):
