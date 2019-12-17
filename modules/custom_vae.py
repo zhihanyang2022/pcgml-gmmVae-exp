@@ -143,6 +143,7 @@ class VAE(nn.Module):
         self.encoder = nn.Sequential(down_sampler_od)
 
         h_dim, z_dim = design.h_dim, design.z_dim
+        self.z_dim = z_dim  # used for the self.generate method
         self.fc1 = nn.Linear(h_dim, z_dim)  # get means
         self.fc2 = nn.Linear(h_dim, z_dim)  # get logvars
         self.fc3 = nn.Linear(z_dim, h_dim)  # process the samples for the up_sampler
@@ -182,10 +183,16 @@ class VAE(nn.Module):
         z, mu, logvar = self.encode(x)
         z = self.decode(z)
         return z, mu, logvar
+    
+    def generate(self, n:int)->torch.Tensor:
+        zs = torch.randn((n, self.z_dim)).to(self.dev)
+        with torch.no_grad():
+            gens = self.decoder(self.fc3(zs))
+        return gens
 
 def get_vae_and_opt(design_json_fpath:str, dev:str):
     """Get a trainable VAE and its optimizer."""
-    vae = VAE(design=VAEDesign.from_json(design_json_fpath), dev=dev)  # this dev is used in the VAE.reparameterize function
+    vae = VAE(design=VAEDesign.from_json(design_json_fpath), dev=dev)  # this dev is used in the VAE.reparameterize and VAE.generate method
     vae = vae.to(dev).double()  # this dev decides where model parameters are loaded
     opt = torch.optim.Adam(vae.parameters(), lr=1e-3)
     return vae, opt

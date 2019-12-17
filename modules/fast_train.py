@@ -9,6 +9,11 @@ from torch.utils.data import TensorDataset, DataLoader
 
 from data_utils import WrappedDataLoader
 
+from model import get_model, load_model
+
+from graphpaper import GraphPaper
+import pandas as pd
+
 class DataConversion():
 
     @staticmethod
@@ -20,7 +25,7 @@ class DataConversion():
         :param num_channels: the depth of the to-be-outputted 3d arrays
         :return an array of 3d arrays, shape: (bs, height, width, num_channels)
         """
-        return np.eye(num_channels)[int_data]
+        return np.rollaxis(np.eye(num_channels)[int_data], 3, 1)
 
     @staticmethod
     def np_array2torch_tensor(np_array:np.array)->torch.Tensor:
@@ -40,7 +45,7 @@ class DataConversion():
             and outputs them
         :return a WrappedDataLoader instance that can be used directly for training
         """
-        ds = TensorDataset(xs, ys)
+        ds = TensorDataset(torch_xs, torch_ys)
         dl = DataLoader(ds, batch_size=bs, shuffle=shuffle)
         wrapped_dl = WrappedDataLoader(dl, preprocess_func)
         return wrapped_dl
@@ -66,12 +71,178 @@ class DataPipeline():
         :param shuffle: whether training examples and targets are shuffled, True for training, False for validation
         :return a WrappedDataLoader instance that can be used directly for training a binary VAE
         """
-        np_binary_imgs = DataConversion.np_int2np_binary(np_int_imgs)
+        np_binary_imgs = DataConversion.np_int2np_binary(np_int_imgs, num_channels=2)
         torch_binary_imgs = DataConversion.np_array2torch_tensor(np_binary_imgs)
-        dl = DataConversion.get_dl(
-            xs=torch_binary_imgs, ys=torch_binary_imgs, 
-            bs=bs, shuffle=shuffle, 
-            preprocess_func=DataPreprocess.to_cuda
-        )
+        if torch.cuda.is_available():
+            dl = DataConversion.get_dl(
+                torch_xs=torch_binary_imgs, torch_ys=torch_binary_imgs, 
+                bs=bs, shuffle=shuffle, 
+                preprocess_func=DataPreprocess.to_cuda
+            )
+        else:
+            dl = DataConversion.get_dl(
+                torch_xs=torch_binary_imgs, torch_ys=torch_binary_imgs, 
+                bs=bs, shuffle=shuffle, 
+                preprocess_func=None
+            )
         return dl
+
+    @staticmethod
+    def float_vae(np_float_imgs:np.array, bs:int, shuffle:bool=True):
+        torch_float_imgs = DataConversion.np_array2torch_tensor(np_float_imgs)
+        if torch.cuda.is_available():
+            dl = DataConversion.get_dl(
+                torch_xs=torch_float_imgs, torch_ys=torch_float_imgs, 
+                bs=bs, shuffle=shuffle, 
+                preprocess_func=DataPreprocess.to_cuda
+            )
+        else:
+            dl = DataConversion.get_dl(
+                torch_xs=torch_float_imgs, torch_ys=torch_float_imgs, 
+                bs=bs, shuffle=shuffle, 
+                preprocess_func=None
+            )
+        return dl
+
+class Loss():
+
+    @staticmethod
+    def binary_loss_fn(recon_x, x, mu, logvar):
+        BCE = F.binary_cross_entropy(recon_x, x, reduction='sum') / recon_x.size(0)
+        KLD = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())  # already averaged over examples
+        return BCE + KLD, BCE, KLD
+
+    @staticmethod
+    def float_loss_fn(recon_x, x, mu, logvar):
+        BCE = torch.sum((recon_x - x) ** 2)
+        KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+        return BCE + KLD, BCE, KLD
+
+class Learner():
+    def __init__(self, train_data, model, loss, optim, valid_data=None):
+        self.train_data, self.model, self.loss, self.optim, self.valid_data = train_data, model, loss, optim, valid_data
+
+class Callback(): 
+    def on_train_begin(self, sd): pass
+    def on_epoch_begin(self, sd): pass
+    def on_batch_begin(self, sd): pass
+    def on_loss_begin(self, sd): pass
+    def on_backward_begin(self, sd): pass
+    def on_backward_end(self, sd): pass
+    def on_step_end(self, sd): pass
+    def on_batch_end(self, sd): pass
+    def on_epoch_end(self, sd): pass
+    def on_train_end(self, sd): pass
+
+class MetricsRecorder(Callback):
+    _order=1
+    
+    def on_train_begin(self, sd):
+        sd['losses'], sd['bces'], sd['klds'] = [], [], []
+
+    def on_epoch_begin(self, sd):
+        self.total_loss, self.total_bce, self.total_kld = 0, 0, 0
+        self.num_examples = 0
+    
+    def on_batch_end(self, sd):
+        bs = sd.get('bs')
+        loss_b = sd.get('loss_b')
+        bce_b = sd.get('bce_b')
+        kld_b = sd.get('kld_b')
+        
+        assert None not in (bs, loss_b, bce_b, kld_b), \
+            AssertionError('One or more metric values are None.')
+        
+        self.num_examples += bs 
+        self.total_loss += loss_b
+        self.total_bce += bce_b
+        self.total_kld += kld_b
+    
+    def on_epoch_end(self, sd):
+        sd['losses'].append(self.total_loss / self.num_examples)
+        sd['bces'].append(self.total_bce / self.num_examples)
+        sd['klds'].append(self.total_kld / self.num_examples)
+
+class MetricsPlotter(Callback):
+    _order=2
+    
+    def __init__(self, png_name):
+        self.paper = GraphPaper(height=5, width=7, nrows=1, ncols=1)
+        self.png_name = png_name
+    
+    def on_epoch_end(self, sd):
+        epochs = np.arange(1, sd['epoch']+1)
+        
+        if sd['epoch'] != 1: self.paper.fig.delaxes(self.paper.fig.axes[0])
+        
+        self.paper.plot_2d(
+            pos=1, 
+            xs=epochs, ys=sd['losses'], 
+            label='LOSS',
+            labels=('epochs', 'loss per example'), 
+            grid=True,
+        )
+
+        self.paper.plot_2d(
+            pos=1,
+            xs=epochs, ys=sd['bces'],
+            label='BCE',
+            overlay=True
+        )
+
+        self.paper.plot_2d(
+            pos=1,
+            xs=epochs, ys=sd['klds'],
+            label='KLD',
+            overlay=True
+        )
+        
+        self.paper.fig.legend()
+        self.paper.fig.canvas.draw()
+    
+    def on_train_end(self, sd):
+        self.paper.save(self.png_name)
+
+class MetricsLogger(Callback):
+    _order=2
+    
+    def __init__(self, csv_name:str): self.csv_name = csv_name
+    
+    def on_train_end(self, sd):
+        loss_df = pd.DataFrame(np.array([sd['losses'], sd['bces'], sd['klds']]).T)
+        loss_df.columns = ['LOSS', 'BCE', 'KLD']
+        loss_df.to_csv(self.csv_name)
+
+class ModelSaver(Callback):
+    _order=2
+    
+    def __init__(self, model_name:str): self.model_name = model_name
+    
+    def on_train_end(self, sd):
+        torch.save(sd['model'].state_dict(), self.model_name)
+
+class CallbackHandler(Callback): 
+    
+    def __call__(self, cb_category:str):
+        for cb in self.cbs: getattr(cb, cb_category)(self.state_dict)
+    
+    def on_train_begin(self): self('on_train_begin')
+        
+    def on_epoch_begin(self): self('on_epoch_begin')
+    
+    def on_batch_begin(self): self('on_batch_begin')
+        
+    def on_loss_begin(self): self('on_loss_begin')
+        
+    def on_backward_begin(self): self('on_backward_begin')
+        
+    def on_backward_end(self): self('on_backward_end')
+        
+    def on_step_end(self): self('on_step_end')
+        
+    def on_batch_end(self): self('on_batch_end')
+    
+    def on_epoch_end(self): self('on_epoch_end')
+        
+    def on_train_end(self): self('on_train_end')
 
