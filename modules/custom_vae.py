@@ -127,8 +127,8 @@ class UnFlatten(nn.Module):
         super().__init__()
         self.out_shape = out_shape
     
-    def forward(self):
-        return input.view(input.size(0), **self.out_shape)
+    def forward(self, input):
+        return input.view(input.size(0), *self.out_shape)
 
 class VAE(nn.Module):
     """Trainable variational auto-encoder implemented in PyTorch."""
@@ -185,7 +185,7 @@ class VAE(nn.Module):
         return z, mu, logvar
     
     def generate(self, n:int)->torch.Tensor:
-        zs = torch.randn((n, self.z_dim)).to(self.dev)
+        zs = torch.randn((n, self.z_dim)).double().to(self.dev)
         with torch.no_grad():
             gens = self.decoder(self.fc3(zs))
         return gens

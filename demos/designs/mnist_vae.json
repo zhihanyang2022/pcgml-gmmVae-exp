@@ -1,51 +1,61 @@
 {
     "down_sampler_design": {
         "in_channels": 1,
-        "layer_num": 2,
+        "layer_num": 3,
         "kernel_nums": [
-            3,
-            3
+            16,
+            32,
+            64
         ],
         "kernel_sizes": [
+            4,
             4,
             4
         ],
         "strides": [
+            2,
             2,
             2
         ],
         "paddings": [
             0,
+            0,
             0
         ]
     },
     "up_sampler_design": {
-        "in_channels": 3,
-        "layer_num": 2,
+        "in_channels": 64,
+        "layer_num": 3,
         "kernel_nums": [
-            3,
+            32,
+            16,
             1
         ],
         "kernel_sizes": [
+            4,
             4,
             4
         ],
         "strides": [
             2,
+            2,
             2
         ],
         "paddings": [
+            0,
             0,
             0
         ],
         "up_sample": true,
         "output_paddings": [
             1,
+            1,
             0
-        ]
+        ],
+        "final_activation": "sigmoid"
     },
     "h_dim": 64,
-    "z_dim": 3,
+    "z_dim": 10,
     "unflatten_out_shape": [
         64,
         1,
