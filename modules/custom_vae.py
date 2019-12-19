@@ -49,6 +49,7 @@ def conv_sampler(
     layers = OrderedDict([])
     for i in range(layer_num):
         
+        # convolutional layer
         if not up_sample:
             layers[f'block{i}-{core_layer_name}'] = core_layer(
                 in_channels=in_channels, 
@@ -69,13 +70,19 @@ def conv_sampler(
                 output_padding=output_paddings[i]
             )
             
-        layers[f'block{i}-bn'] = nn.BatchNorm2d(kernel_nums[i])
+        # batchnorm layer
+        if i < layer_num - 1 or (i == layer_num - 1 and not up_sample):  # not for final layer of decoder / up-sampler
+            layers[f'block{i}-bn'] = nn.BatchNorm2d(kernel_nums[i])
+        
+        # activations
         if i == layer_num - 1:
-            if final_activation is not None:
-                if final_activation == 'sigmoid':
-                    layers[f'block{i}-{final_activation}'] = nn.Sigmoid()
-                elif final_activation == 'relu':
-                    layers[f'block{i}-{final_activation}'] = nn.ReLU()
+            
+            if not up_sample:  # for encoder / down-sampler
+                layers[f'block{i}-{final_activation}'] = activation
+            
+            else:  # for decoder / up-sampler
+                layers[f'block{i}-{final_activation}'] = nn.Sigmoid()
+        
         else:
             layers[f'block{i}-{activation_name}'] = activation
         
@@ -194,7 +201,7 @@ def get_vae_and_opt(design_json_fpath:str, dev:str):
     """Get a trainable VAE and its optimizer."""
     vae = VAE(design=VAEDesign.from_json(design_json_fpath), dev=dev)  # this dev is used in the VAE.reparameterize and VAE.generate method
     vae = vae.to(dev).double()  # this dev decides where model parameters are loaded
-    opt = torch.optim.Adam(vae.parameters(), lr=1e-3)
+    opt = torch.optim.Adam(vae.parameters(), lr=2e-4, betas=(0.5, 0.999))
     return vae, opt
 
 def load_vae(path:str, design_json_fpath:str, dev:str='cpu'):

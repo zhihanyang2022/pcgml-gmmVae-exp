@@ -73,8 +73,8 @@ class VAEDesigner():
         self.input_shape = input_shape
         self.up_sample = up_sample
         
-        if self.up_sample: mode = 'DOWNSAMPLING'
-        else: mode = 'UPSAMPLING'
+        if self.up_sample: mode = 'UPSAMPLING'
+        else: mode = 'DOWNSAMPLING'
         
         # SET HYPERPARAMS
         

@@ -3,8 +3,8 @@
         "in_channels": 1,
         "layer_num": 3,
         "kernel_nums": [
-            16,
-            32,
+            64,
+            64,
             64
         ],
         "kernel_sizes": [
@@ -27,8 +27,8 @@
         "in_channels": 64,
         "layer_num": 3,
         "kernel_nums": [
-            32,
-            16,
+            64,
+            64,
             1
         ],
         "kernel_sizes": [

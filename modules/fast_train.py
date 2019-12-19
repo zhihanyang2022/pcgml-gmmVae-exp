@@ -26,7 +26,7 @@ class DataConversion():
         :param num_channels: the depth of the to-be-outputted 3d arrays
         :return an array of 3d arrays, shape: (bs, height, width, num_channels)
         """
-        return np.rollaxis(np.eye(num_channels)[int_data], 3, 1)
+        return np.rollaxis(np.eye(num_channels)[np_int_data], 3, 1)
 
     @staticmethod
     def np_array2torch_tensor(np_array:np.array)->torch.Tensor:
@@ -62,7 +62,7 @@ class DataPreprocess():
 class DataPipeline():
 
     @staticmethod
-    def binary_vae(np_int_imgs:np.array, bs:int, shuffle:bool=True):
+    def pcgml_gmmvae(np_int_imgs:np.array, num_channels, bs:int, dev:str, shuffle:bool=True):
         """
         Convert an array of 2d arrays of integers to a WrappedDataLoader that can be used to train a binary VAE.
         A binary VAE is a VAE that takes in and outputs one-hot encoded arrays.
@@ -72,9 +72,9 @@ class DataPipeline():
         :param shuffle: whether training examples and targets are shuffled, True for training, False for validation
         :return a WrappedDataLoader instance that can be used directly for training a binary VAE
         """
-        np_binary_imgs = DataConversion.np_int2np_binary(np_int_imgs, num_channels=2)
+        np_binary_imgs = DataConversion.np_int2np_binary(np_int_imgs, num_channels=num_channels)
         torch_binary_imgs = DataConversion.np_array2torch_tensor(np_binary_imgs)
-        if torch.cuda.is_available():
+        if dev == 'cuda' and torch.cuda.is_available():
             dl = DataConversion.get_dl(
                 torch_xs=torch_binary_imgs, torch_ys=torch_binary_imgs, 
                 bs=bs, shuffle=shuffle, 
@@ -108,9 +108,9 @@ class DataPipeline():
 class Loss():
 
     @staticmethod
-    def binary_loss_fn(recon_x, x, mu, logvar):
+    def bce_kld_total(recon_x, x, mu, logvar):
         BCE = F.binary_cross_entropy(recon_x, x, reduction='sum')
-        KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())  # already averaged over examples
+        KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
         return BCE + KLD, BCE, KLD
 
     @staticmethod

@@ -1,0 +1,63 @@
+{
+    "down_sampler_design": {
+        "in_channels": 12,
+        "layer_num": 3,
+        "kernel_nums": [
+            64,
+            64,
+            64
+        ],
+        "kernel_sizes": [
+            4,
+            4,
+            4
+        ],
+        "strides": [
+            2,
+            2,
+            2
+        ],
+        "paddings": [
+            0,
+            1,
+            1
+        ]
+    },
+    "up_sampler_design": {
+        "in_channels": 64,
+        "layer_num": 3,
+        "kernel_nums": [
+            64,
+            64,
+            64
+        ],
+        "kernel_sizes": [
+            4,
+            4,
+            4
+        ],
+        "strides": [
+            2,
+            2,
+            2
+        ],
+        "paddings": [
+            1,
+            1,
+            0
+        ],
+        "up_sample": true,
+        "output_paddings": [
+            1,
+            1,
+            0
+        ]
+    },
+    "h_dim": 64,
+    "z_dim": 32,
+    "unflatten_out_shape": [
+        64,
+        1,
+        1
+    ]
+}
